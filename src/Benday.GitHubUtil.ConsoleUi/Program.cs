@@ -10,7 +10,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        var assembly = typeof(SampleCommand).Assembly;
+        var assembly = typeof(CreateWorkItemInfoFromDataGeneratorCommand).Assembly;
 
         var versionInfo =
             FileVersionInfo.GetVersionInfo(
@@ -19,8 +19,8 @@ class Program
         var options = new DefaultProgramOptions();
 
         options.Version = $"v{versionInfo.FileVersion}";
-        options.ApplicationName = "[applicaiton friendly name here]";
-        options.Website = "[add your website url here]";
+        options.ApplicationName = "GitHub Utilities";
+        options.Website = "https://www.benday.com";
         options.UsesConfiguration = false;
 
         var program = new DefaultProgram(options, assembly);

@@ -1,1 +1,1 @@
-dotnet tool uninstall --global BendayGitHubUtilConsoleUi
+dotnet tool uninstall --global githubutil
