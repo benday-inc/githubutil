@@ -29,6 +29,9 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         arguments.AddBoolean("estimates").AllowEmptyValue().AsNotRequired().
             WithDescription("If in github mode, generate estimates using fibonnaci values.");
 
+
+        arguments.AddString("ownerid").AllowEmptyValue().AsNotRequired().WithDescription("Owner id.");
+
         arguments.AddString("projectname").AllowEmptyValue().AsNotRequired().WithDescription("Name of the project to use.");
 
         return arguments;
@@ -39,6 +42,8 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         var github = Arguments.GetBooleanValue("github");
         var estimates = Arguments.GetBooleanValue("estimates");
         var projectName = Arguments.GetStringValue("projectname");
+        var ownerId = Arguments.GetStringValue("ownerid");
+
 
         if (github == false && estimates == false)
         {
@@ -52,13 +57,13 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         }
         else
         {
-            await GenerateForGitHub(projectName, estimates);
+            await GenerateForGitHub(projectName, estimates, ownerId);
         }
 
 
     }
 
-    private async Task GenerateForGitHub(string projectName, bool estimates)
+    private async Task GenerateForGitHub(string projectName, bool estimates, string ownerId)
     {
         var generator = new WorkItemScriptGenerator(false);
 
@@ -69,7 +74,7 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
             throw new InvalidOperationException("Project name is required.");
         }
 
-        var projectInfo = await GetProjectInfo(projectName, "benday-inc");
+        var projectInfo = await GetProjectInfo(projectName, ownerId);
 
         GitHubFieldInfo? fieldInfo = null;
 
