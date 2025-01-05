@@ -4,6 +4,7 @@ public static class Constants
 {
     public const string Category_TestData = "Test Data";
     public const string CommandName_ProjectIssuesRandom = "projectissues";
+    public const string CommandName_ProjectIssuesDelete = "deleteissues";
 }
 
 

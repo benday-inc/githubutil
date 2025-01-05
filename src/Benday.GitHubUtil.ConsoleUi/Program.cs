@@ -10,7 +10,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        var assembly = typeof(CreateWorkItemInfoFromDataGeneratorCommand).Assembly;
+        var assembly = typeof(DeleteProjectItemsCommand).Assembly;
 
         var versionInfo =
             FileVersionInfo.GetVersionInfo(

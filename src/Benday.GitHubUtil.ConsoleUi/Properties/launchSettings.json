@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Benday.GitHubUtil.ConsoleUi": {
+      "commandName": "Project"
+    },
+    "delete project items": {
+      "commandName": "Project",
+      "commandLineArgs": "deleteissues /projectname:\"TestProject20250104\" /ownerid:benday-inc"
+    }
+  }
+}

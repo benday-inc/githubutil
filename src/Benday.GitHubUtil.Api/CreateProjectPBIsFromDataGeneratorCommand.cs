@@ -12,9 +12,9 @@ namespace Benday.GitHubUtil.Api;
     Name = Constants.CommandName_ProjectIssuesRandom,
         Description = "Create draft issues in a project using random data generator",
         IsAsync = true)]
-public class CreateWorkItemInfoFromDataGeneratorCommand : AsynchronousCommand
+public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
 {
-    public CreateWorkItemInfoFromDataGeneratorCommand(
+    public CreateProjectPBIsFromDataGeneratorCommand(
         CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)
     {
     }
@@ -24,7 +24,7 @@ public class CreateWorkItemInfoFromDataGeneratorCommand : AsynchronousCommand
         var arguments = new ArgumentCollection();
 
         arguments.AddBoolean("github").AllowEmptyValue().AsNotRequired().
-            WithDescription("Generate as a github cli script.");
+            WithDescription("Generate and run as a github cli script.");
 
         arguments.AddBoolean("estimates").AllowEmptyValue().AsNotRequired().
             WithDescription("If in github mode, generate estimates using fibonnaci values.");
@@ -69,7 +69,7 @@ public class CreateWorkItemInfoFromDataGeneratorCommand : AsynchronousCommand
             throw new InvalidOperationException("Project name is required.");
         }
 
-        var projectInfo = await GetProjectInfo(projectName);
+        var projectInfo = await GetProjectInfo(projectName, "benday-inc");
 
         GitHubFieldInfo? fieldInfo = null;
 
@@ -90,128 +90,6 @@ public class CreateWorkItemInfoFromDataGeneratorCommand : AsynchronousCommand
         }
         // var template = $"gh issue create --title \"Your Title\" --draft --project \"Your Project Name\"";
     }
-
-    private async Task<GitHubFieldInfo?> GetFieldInfo(GitHubProject projectInfo)
-    {
-        WriteLine($"Getting field info for project {projectInfo.Title}...");
-
-        var template = $"project field-list {projectInfo.Number} --owner {projectInfo.Owner.Login} --format json";
-
-        var processStartInfo = new ProcessStartInfo("gh", template)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        string output = string.Empty;
-        string error = string.Empty;
-
-        using (var process = new Process())
-        {
-            process.StartInfo = processStartInfo;
-            process.Start();
-
-            output = await process.StandardOutput.ReadToEndAsync();
-
-            error = await process.StandardError.ReadToEndAsync();
-
-            if (!string.IsNullOrEmpty(error))
-            {
-                WriteLine($"Error: {error}");
-            }
-            else
-            {
-                WriteLine($"Output: {output}");
-            }
-
-            process.WaitForExit();
-        }
-
-        if (string.IsNullOrEmpty(output) == true)
-        {
-            throw new InvalidOperationException("No output from gh command.");
-        }
-
-        var fieldInfo = JsonSerializer.Deserialize<GithubProjectFieldInfoResponse>(output) ??
-            throw new InvalidOperationException("Could not deserialize output.");
-
-        var estimateField = fieldInfo.Fields.FirstOrDefault(
-            f => f.Name.Equals("Estimate", StringComparison.OrdinalIgnoreCase));
-
-        if (estimateField == null)
-        {
-            throw new InvalidOperationException("Could not find field with name Estimate.");
-        }
-        else
-        {
-            WriteLine($"Found field with id {estimateField.Id}");
-            return estimateField;
-        }
-    }
-
-
-    private async Task<GitHubProject> GetProjectInfo(string projectName)
-    {
-        WriteLine($"Getting project info for {projectName}...");
-
-        var template = $"project list --owner benday-inc --format json";
-
-        var processStartInfo = new ProcessStartInfo("gh", template)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        string output = string.Empty;
-        string error = string.Empty;
-
-        using (var process = new Process())
-        {
-            process.StartInfo = processStartInfo;
-            process.Start();
-
-            output = await process.StandardOutput.ReadToEndAsync();
-
-            error = await process.StandardError.ReadToEndAsync();
-
-            if (!string.IsNullOrEmpty(error))
-            {
-                WriteLine($"Error: {error}");
-            }
-            else
-            {
-                WriteLine($"Output: {output}");
-            }
-
-            process.WaitForExit();
-        }
-
-        if (string.IsNullOrEmpty(output) == true)
-        {
-            throw new InvalidOperationException("No output from gh command.");
-        }
-
-        var projectInfo = JsonSerializer.Deserialize<GitHubProjectsResponse>(output) ??
-            throw new InvalidOperationException("Could not deserialize output.");
-
-        var project = projectInfo.Projects.FirstOrDefault(
-            p => p.Title.Equals(projectName, StringComparison.OrdinalIgnoreCase));
-
-        if (project == null)
-        {
-            throw new InvalidOperationException($"Could not find project with name {projectName}.");
-        }
-        else 
-        {
-            WriteLine($"Found project with id {project.Id}");
-            return project;
-        }
-    }
-
 
     private async Task CreateItemInProject(
         GitHubProject project, bool estimates, WorkItemScriptGenerator generator, string title, 
@@ -366,120 +244,4 @@ public class CreateWorkItemInfoFromDataGeneratorCommand : AsynchronousCommand
 
         return items;
     }
-}
-
-
-
-public class GitHubProjectsResponse
-{
-    [JsonPropertyName("projects")]
-    public GitHubProject[] Projects { get; set; } = new GitHubProject[0];
-
-    [JsonPropertyName("totalCount")]
-    public int TotalCount { get; set; }
-
-}
-
-
-public class GitHubProject
-{
-    [JsonPropertyName("closed")]
-    public bool Closed { get; set; }
-
-    [JsonPropertyName("fields")]
-    public GithubProjectFields Fields { get; set; } = new();
-
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("items")]
-    public GitHubProjectItems Items { get; set; } = new();
-
-    [JsonPropertyName("number")]
-    public int Number { get; set; }
-
-    [JsonPropertyName("owner")]
-    public GithubProjectOwner Owner { get; set; } = new();
-
-    [JsonPropertyName("public")]
-    public bool Public { get; set; }
-
-    [JsonPropertyName("readme")]
-    public string Readme { get; set; } = string.Empty;
-
-    [JsonPropertyName("shortDescription")]
-    public string ShortDescription { get; set; } = string.Empty;
-
-    [JsonPropertyName("title")]
-    public string Title { get; set; } = string.Empty;
-
-    [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
-
-}
-
-
-public class GithubProjectFields
-{
-    [JsonPropertyName("totalCount")]
-    public int TotalCount { get; set; }
-
-}
-
-
-public class GitHubProjectItems
-{
-    [JsonPropertyName("totalCount")]
-    public int TotalCount { get; set; }
-
-}
-
-
-public class GithubProjectOwner
-{
-    [JsonPropertyName("login")]
-    public string Login { get; set; } = string.Empty;
-
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = string.Empty;
-
-}
-
-
-public class GithubProjectFieldInfoResponse
-{
-    [JsonPropertyName("fields")]
-    public GitHubFieldInfo[] Fields { get; set; } = new GitHubFieldInfo[0];
-
-    [JsonPropertyName("totalCount")]
-    public int TotalCount { get; set; }
-
-}
-
-
-public class GitHubFieldInfo
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = string.Empty;
-
-    [JsonPropertyName("options")]
-    public GithubFieldOption[] Options { get; set; } = new GithubFieldOption[0];
-
-}
-
-
-public class GithubFieldOption
-{
-    [JsonPropertyName("id")]
-    public string Id { get; set; } = string.Empty;
-
-    [JsonPropertyName("name")]
-    public string Name { get; set; } = string.Empty;
-
 }
