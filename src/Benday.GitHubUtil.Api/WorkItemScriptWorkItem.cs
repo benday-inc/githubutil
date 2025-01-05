@@ -1,4 +1,4 @@
-﻿namespace Benday.AzureDevOpsUtil.Api.ScriptGenerator;
+﻿namespace Benday.GitHubUtil.Api;
 
 public class WorkItemScriptWorkItem
 {

@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Benday.AzureDevOpsUtil.Api.ScriptGenerator;
+namespace Benday.GitHubUtil.Api;
 public class WorkItemScriptRow
 {
     private string _refname = string.Empty;

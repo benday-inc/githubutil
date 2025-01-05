@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Benday.AzureDevOpsUtil.Api.ScriptGenerator;
+namespace Benday.GitHubUtil.Api;
 public class WorkItemScriptSprint
 {
     public int SprintNumber { get; set; }

@@ -1,5 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Benday.GitHubUtil.Api\Benday.GitHubUtil.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -19,5 +25,6 @@
     <Description>A collection of useful utilities for working with GitHub Projects.</Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <AssemblyName>githubutil</AssemblyName>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 </Project>
