@@ -29,10 +29,12 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         arguments.AddBoolean("estimates").AllowEmptyValue().AsNotRequired().
             WithDescription("If in github mode, generate estimates using fibonnaci values.");
 
-
         arguments.AddString("ownerid").AllowEmptyValue().AsNotRequired().WithDescription("Owner id.");
 
         arguments.AddString("projectname").AllowEmptyValue().AsNotRequired().WithDescription("Name of the project to use.");
+
+        arguments.AddInt32("count").AsNotRequired().
+            WithDescription("Number of items to create. (Default value is 10)").WithDefaultValue(10);
 
         return arguments;
     }
@@ -43,11 +45,12 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         var estimates = Arguments.GetBooleanValue("estimates");
         var projectName = Arguments.GetStringValue("projectname");
         var ownerId = Arguments.GetStringValue("ownerid");
+        var count = Arguments.GetInt32Value("count");
 
 
         if (github == false && estimates == false)
         {
-            var items = GenerateTitles();
+            var items = GenerateTitles(count);
 
             foreach (var item in items)
             {
@@ -57,17 +60,17 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         }
         else
         {
-            await GenerateForGitHub(projectName, estimates, ownerId);
+            await GenerateForGitHub(projectName, estimates, ownerId, count);
         }
 
 
     }
 
-    private async Task GenerateForGitHub(string projectName, bool estimates, string ownerId)
+    private async Task GenerateForGitHub(string projectName, bool estimates, string ownerId, int numberOfTitles)
     {
         var generator = new WorkItemScriptGenerator(false);
 
-        var items = GenerateTitles();
+        var items = GenerateTitles(numberOfTitles);
 
         if (string.IsNullOrEmpty(projectName) == true)
         {
@@ -231,14 +234,12 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
         WriteLine();
     }
 
-    private List<string> GenerateTitles()
+    private List<string> GenerateTitles(int numberOfTitles)
     {
         WriteLine("Running in titles only mode. Skipping write to Azure DevOps.");
         WriteLine();
 
         var generator = new WorkItemScriptGenerator(false);
-
-        var numberOfTitles = 40;
 
         var items = new List<string>();
 
