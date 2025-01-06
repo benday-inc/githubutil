@@ -26,10 +26,11 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>benday</Authors>
     <Copyright>2025</Copyright>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
-    <Version>1.1.0</Version>
+    <AssemblyVersion>1.2.0</AssemblyVersion>
+    <Version>1.2.0</Version>
     <Description>A collection of useful utilities for working with GitHub Projects.</Description>
-    <PackageReleaseNotes>v1.1 - Fixed bugs. Added build delete command of issues in a project. 
+    <PackageReleaseNotes>v1.2 - Fixed bugs. Changed some default values.
+v1.1 - Fixed bugs. Added build delete command of issues in a project. 
 v1.0 - Creating utility to generate sample draft issues in a project with sample titles and estimates</PackageReleaseNotes>
     <AssemblyName>githubutil</AssemblyName>
     <PackageReadmeFile>README.md</PackageReadmeFile>

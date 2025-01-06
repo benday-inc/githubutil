@@ -23,10 +23,9 @@ public class DeleteProjectItemsCommand : GitHubCommandBase
     {
         var arguments = new ArgumentCollection();
 
-        arguments.AddString("projectname").AllowEmptyValue().AsNotRequired().WithDescription("Name of the project to use.");
+        arguments.AddString("projectname").WithDescription("Name of the project to use.");
 
-
-        arguments.AddString("ownerid").AllowEmptyValue().AsNotRequired().WithDescription("Owner id.");
+        arguments.AddString("ownerid").WithDescription("Owner id");
 
         return arguments;
     }
@@ -47,6 +46,16 @@ public class DeleteProjectItemsCommand : GitHubCommandBase
 
         if (items.TotalCount > 0)
         {
+            WriteLine($"Found {items.TotalCount} items to delete.  Are you sure you want to delete them? Type 'yes' to continue.");
+
+            var response = Console.ReadLine();
+
+            if (response != "yes")
+            {
+                WriteLine("Aborting delete.");
+                return;
+            }
+
             foreach (var item in items.Items)
             {
                 WriteLine($"Deleting item {item.Title}...");
@@ -58,7 +67,7 @@ public class DeleteProjectItemsCommand : GitHubCommandBase
             WriteLine("No items to delete.");
         }
     }
-private Task DeleteItemAsync(GitHubProject project, GithubProjectItem item)
+    private Task DeleteItemAsync(GitHubProject project, GithubProjectItem item)
     {
         var template = $"project item-delete {project.Number} --id {item.Id} --owner {project.Owner.Login} --format json";
 
