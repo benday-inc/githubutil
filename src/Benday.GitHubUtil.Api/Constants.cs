@@ -7,6 +7,8 @@ public static class Constants
     public const string CommandName_ProjectIssuesRandom = "projectissues";
     public const string CommandName_ProjectIssuesDelete = "deleteissues";
     public const string CommandName_ProjectIterations = "iterations";
+    public const string CommandName_ProjectItems = "projectitems";
+    public const string CommandName_GraphQlMetadata = "graphqlmetadata";
     public const string CommandArg_OwnerId = "ownerid";
     public const string CommandArg_Count = "count";
     public const string CommandArg_ProjectName = "projectname";

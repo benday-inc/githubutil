@@ -10,6 +10,10 @@
     "get project iterations": {
       "commandName": "Project",
       "commandLineArgs": "iterations /projectname:\"Test Project Jan 4 2025\" /ownerid:benday-inc"
+    },
+    "graphqlmetadata": {
+      "commandName": "Project",
+      "commandLineArgs": "graphqlmetadata"
     }
   }
 }

@@ -10,8 +10,4 @@
     <PackageReference Include="Benday.CommandsFramework" Version="4.4.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Messages/" />
-  </ItemGroup>
-
 </Project>
