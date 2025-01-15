@@ -97,9 +97,32 @@ public class ListProjectIterationsCommand : GitHubCommandBase
                         WriteLine($"    Id: {iteration.Id}");
                         WriteLine($"    Start Date: {iteration.StartDate}");
                         WriteLine($"    Duration: {iteration.Duration}");
+
+                        var isCurrentIteration = IsCurrentIteration(iteration);
+
+                        WriteLine($"    Is Current: {isCurrentIteration}");
                     }
                 }
             }
+        }
+    }
+
+    private bool IsCurrentIteration(Iteration iteration)
+    {
+        var now = DateTime.Now;
+
+        if (!DateTime.TryParse(iteration.StartDate, out var iterationStartDate))
+        {
+            return false;
+        }
+
+        if (iterationStartDate <= now && iterationStartDate.AddDays(iteration.Duration) >= now)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 
