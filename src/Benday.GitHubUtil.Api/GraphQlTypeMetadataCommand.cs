@@ -26,6 +26,10 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
       AsRequired().
       WithDescription("Name of the type to get metadata for.");
 
+    arguments.AddString("filter").AsNotRequired().
+      WithDescription("Filter for the query.").
+      WithDefaultValue(string.Empty);
+
     return arguments;
   }
 
@@ -34,11 +38,17 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
     WriteLine("Getting metadata for type...");
 
     var typeName = Arguments.GetStringValue(Constants.CommandArg_TypeName);
+    var filter = Arguments.GetStringValue("filter");
 
-    await GetMetadata(typeName);
+    if (string.IsNullOrWhiteSpace(filter) == false)
+    {
+      WriteLine($"Filter: {filter}");
+    }
+
+    await GetMetadata(typeName, filter);
   }
 
-  private async Task GetMetadata(string typeName)
+  private async Task GetMetadata(string typeName, string filter)
   {
     GitHubCliCommandRunner runner;
 
@@ -74,6 +84,38 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
 
       foreach (var node in response.Data.Type.Fields)
       {
+        if (string.IsNullOrWhiteSpace(filter) == false)
+        {
+          var nodeNameStartsWithFilter = node.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase);
+
+          var nodeArgNameStartsWithFilter = false;
+
+          if (node.Args != null && node.Args.Length > 0)
+          {
+            foreach (var arg in node.Args)
+            {
+              if (arg.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+              {
+                nodeArgNameStartsWithFilter = true;
+                break;
+              }
+
+              if (arg.Type != null && arg.Type.Name != null && 
+                arg.Type.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
+              {
+                nodeArgNameStartsWithFilter = true;
+                break;
+              }
+            }
+          }
+
+          if (nodeNameStartsWithFilter == false && nodeArgNameStartsWithFilter == false)
+          {
+            // WriteLine($"Skipping {node.Name} because it does not match filter.");
+            continue;
+          }
+        }
+
         WriteLine();
         WriteLine($"Type: {node.Name}");
         WriteLine($"Description: {node.Description}");

@@ -15,9 +15,17 @@
       "commandName": "Project",
       "commandLineArgs": "graphqlmetadata"
     },
+    "graphqlmetadata with filter": {
+      "commandName": "Project",
+      "commandLineArgs": "graphqlmetadata /filter:projectv2"
+    },
     "graphqltypemetadata": {
       "commandName": "Project",
       "commandLineArgs": "graphqltypemetadata /typename:ProjectV2"
+    },
+    "graphqltypemetadata with filter": {
+      "commandName": "Project",
+      "commandLineArgs": "graphqltypemetadata /typename:ProjectV2 /filter:ProjectV2"
     }
   }
 }

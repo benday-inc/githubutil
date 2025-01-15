@@ -23,6 +23,10 @@ public class GraphQlMetadataCommand : GitHubCommandBase
   {
     var arguments = new ArgumentCollection();
 
+    arguments.AddString("filter").AsNotRequired().
+      WithDescription("Filter for the query.").
+      WithDefaultValue(string.Empty);
+
     return arguments;
   }
 
@@ -30,10 +34,12 @@ public class GraphQlMetadataCommand : GitHubCommandBase
   {
     WriteLine("Getting metadata...");
 
-    await GetMetadata();
+    var filter = Arguments.GetStringValue("filter");
+
+    await GetMetadata(filter);
   }
 
-  private async Task GetMetadata()
+  private async Task GetMetadata(string filter)
   {
     GitHubCliCommandRunner runner;
 
@@ -68,6 +74,16 @@ public class GraphQlMetadataCommand : GitHubCommandBase
 
       foreach (var node in response.Data.Schema.Types)
       {
+        if (node.Name == null)
+        {
+          continue;
+        }
+        else if (string.IsNullOrWhiteSpace(filter) == false &&
+            node.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) == false)
+        {
+          continue;
+        }
+
         WriteLine();
         WriteLine($"Type: {node.Name}");
         WriteLine($"Kind: {node.Kind}");
