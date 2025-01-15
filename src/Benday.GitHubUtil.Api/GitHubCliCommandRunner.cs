@@ -235,10 +235,6 @@ public class GitHubCliCommandRunner
             builder.Append(arg);
             builder.Append(" ");
         }
-
-        WriteLine("****");
-        WriteLine(builder.ToString());
-        WriteLine("****");
     }
 
     private string GetGraphQlQueryValueForCommandLine(string value)

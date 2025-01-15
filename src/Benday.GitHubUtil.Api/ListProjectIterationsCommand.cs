@@ -51,32 +51,18 @@ public class ListProjectIterationsCommand : GitHubCommandBase
 
         GitHubCliCommandRunner runner;
 
-        if (1 == 0)
-        {
-            var query = GetSimpleQuery();
 
-            runner = new GitHubCliCommandRunner(_OutputProvider);
+        var query = GetQuery();
 
-            runner.CommandName = "api";
-            runner.SubCommandName = "graphql";
-            runner.AddFieldArgument("query", query);
+        runner = new GitHubCliCommandRunner(_OutputProvider);
 
-            await runner.RunAsync();
-        }
-        else
-        {
-            var query = GetQuery();
+        runner.CommandName = "api";
+        runner.SubCommandName = "graphql";
+        runner.AddFieldArgument("owner", ownerId);
+        runner.AddFieldArgument("number", projectNumber.Number.ToString());
+        runner.AddFieldArgument("query", query);
 
-            runner = new GitHubCliCommandRunner(_OutputProvider);
-
-            runner.CommandName = "api";
-            runner.SubCommandName = "graphql";
-            runner.AddFieldArgument("owner", ownerId);
-            runner.AddFieldArgument("number", projectNumber.Number.ToString());
-            runner.AddFieldArgument("query", query);
-
-            await runner.RunAsync();
-        }
+        await runner.RunAsync();
 
         if (runner.IsSuccess == false)
         {
@@ -100,14 +86,18 @@ public class ListProjectIterationsCommand : GitHubCommandBase
 
             foreach (var node in response.Data.Organization.ProjectV2.Fields.Nodes)
             {
-                WriteLine($"Field: {node.Name}");
-
-                foreach (var iteration in node.Configuration.Iterations)
+                if (string.IsNullOrEmpty(node.Name) == false)
                 {
-                    WriteLine($"  Iteration: {iteration.Title}");
-                    WriteLine($"    Id: {iteration.Id}");
-                    WriteLine($"    Start Date: {iteration.StartDate}");
-                    WriteLine($"    Duration: {iteration.Duration}");
+
+                    WriteLine($"Field: {node.Name}");
+
+                    foreach (var iteration in node.Configuration.Iterations)
+                    {
+                        WriteLine($"  Iteration: {iteration.Title}");
+                        WriteLine($"    Id: {iteration.Id}");
+                        WriteLine($"    Start Date: {iteration.StartDate}");
+                        WriteLine($"    Duration: {iteration.Duration}");
+                    }
                 }
             }
         }
