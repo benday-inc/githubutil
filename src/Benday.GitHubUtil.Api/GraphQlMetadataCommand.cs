@@ -39,11 +39,11 @@ public class GraphQlMetadataCommand : GitHubCommandBase
     await GetMetadata(filter);
   }
 
-  private async Task GetMetadata(string filter)
+  private async Task<GetGraphQlMetadataResponse> GetMetadata(string filter, bool quiet = false)
   {
     GitHubCliCommandRunner runner;
 
-    var query = GetQuery();
+    var query = GetMetadataQuery();
 
     runner = new GitHubCliCommandRunner(_OutputProvider);
 
@@ -72,24 +72,35 @@ public class GraphQlMetadataCommand : GitHubCommandBase
         throw new InvalidOperationException("Could not deserialize output.");
       }
 
-      foreach (var node in response.Data.Schema.Types)
+      if (quiet == false)
       {
-        if (node.Name == null)
+        foreach (var node in response.Data.Schema.Types)
         {
-          continue;
-        }
-        else if (string.IsNullOrWhiteSpace(filter) == false &&
-            node.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) == false)
-        {
-          continue;
+          if (node.Name == null)
+          {
+            continue;
+          }
+          else if (string.IsNullOrWhiteSpace(filter) == false &&
+              node.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) == false)
+          {
+            continue;
+          }
+
+          WriteLine();
+          WriteLine($"Type: {node.Name}");
+          WriteLine($"Kind: {node.Kind}");
+          WriteLine($"Description: {node.Description}");
         }
 
-        WriteLine();
-        WriteLine($"Type: {node.Name}");
-        WriteLine($"Kind: {node.Kind}");
-        WriteLine($"Description: {node.Description}");
+        return response;
+      }
+      else
+      {
+        return response;
       }
     }
+
+
   }
 
   private bool IsCurrentIteration(Iteration iteration)
@@ -111,7 +122,7 @@ public class GraphQlMetadataCommand : GitHubCommandBase
     }
   }
 
-  private string GetQuery()
+  private string GetMetadataQuery()
   {
     return @"
 query {

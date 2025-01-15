@@ -45,14 +45,14 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
       WriteLine($"Filter: {filter}");
     }
 
-    await GetMetadata(typeName, filter);
+    await GetTypeMetadata(typeName, filter);
   }
 
-  private async Task GetMetadata(string typeName, string filter)
+  private async Task<GetGraphQlTypeMetadataResponse> GetTypeMetadata(string typeName, string filter, bool quiet = false)
   {
     GitHubCliCommandRunner runner;
 
-    var query = GetQuery();
+    var query = GetTypeMetadataQuery();
 
     runner = new GitHubCliCommandRunner(_OutputProvider);
 
@@ -82,6 +82,11 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
         throw new InvalidOperationException("Could not deserialize output.");
       }
 
+      if (quiet == true)
+      {
+        return response;
+      }
+
       foreach (var node in response.Data.Type.Fields)
       {
         if (string.IsNullOrWhiteSpace(filter) == false)
@@ -100,7 +105,7 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
                 break;
               }
 
-              if (arg.Type != null && arg.Type.Name != null && 
+              if (arg.Type != null && arg.Type.Name != null &&
                 arg.Type.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
               {
                 nodeArgNameStartsWithFilter = true;
@@ -138,11 +143,15 @@ public class GraphQlTypeMetadataCommand : GitHubCommandBase
           WriteLine("Args:");
           WriteLine("  No args.");
         }
+
       }
+
+
+      return response;
     }
   }
 
-  private string GetQuery()
+  private string GetTypeMetadataQuery()
   {
     return @"
 query GetTypeMetadata($typeName: String!) {
