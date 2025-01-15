@@ -26,6 +26,10 @@
     "graphqltypemetadata with filter": {
       "commandName": "Project",
       "commandLineArgs": "graphqltypemetadata /typename:ProjectV2 /filter:ProjectV2"
+    },
+    "graphqlmetadata with filter and dump": {
+      "commandName": "Project",
+      "commandLineArgs": "graphqlmetadata /filter:projectv2 /dump"
     }
   }
 }

@@ -11,171 +11,42 @@ namespace Benday.GitHubUtil.Api;
     Name = Constants.CommandName_GraphQlTypeMetadata,
         Description = "Get graphql metadata for a type",
         IsAsync = true)]
-public class GraphQlTypeMetadataCommand : GitHubCommandBase
+public class GraphQlTypeMetadataCommand : MetadataQueryCommand
 {
-  public GraphQlTypeMetadataCommand(
-      CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)
-  {
-  }
-
-  public override ArgumentCollection GetArguments()
-  {
-    var arguments = new ArgumentCollection();
-
-    arguments.AddString(Constants.CommandArg_TypeName).
-      AsRequired().
-      WithDescription("Name of the type to get metadata for.");
-
-    arguments.AddString("filter").AsNotRequired().
-      WithDescription("Filter for the query.").
-      WithDefaultValue(string.Empty);
-
-    return arguments;
-  }
-
-  protected override async Task OnExecute()
-  {
-    WriteLine("Getting metadata for type...");
-
-    var typeName = Arguments.GetStringValue(Constants.CommandArg_TypeName);
-    var filter = Arguments.GetStringValue("filter");
-
-    if (string.IsNullOrWhiteSpace(filter) == false)
+    public GraphQlTypeMetadataCommand(
+        CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)
     {
-      WriteLine($"Filter: {filter}");
     }
 
-    await GetTypeMetadata(typeName, filter);
-  }
-
-  private async Task<GetGraphQlTypeMetadataResponse> GetTypeMetadata(string typeName, string filter, bool quiet = false)
-  {
-    GitHubCliCommandRunner runner;
-
-    var query = GetTypeMetadataQuery();
-
-    runner = new GitHubCliCommandRunner(_OutputProvider);
-
-    runner.CommandName = "api";
-    runner.SubCommandName = "graphql";
-    runner.AddFieldArgument("typeName", typeName);
-    runner.AddFieldArgument("query", query);
-
-    await runner.RunAsync();
-
-    if (runner.IsSuccess == false)
+    public override ArgumentCollection GetArguments()
     {
-      WriteLine("Error running gh command.");
-      WriteLine(runner.ErrorText);
-      throw new KnownException("Error running gh command.");
+        var arguments = new ArgumentCollection();
+
+        arguments.AddString(Constants.CommandArg_TypeName).
+          AsRequired().
+          WithDescription("Name of the type to get metadata for.");
+
+        arguments.AddString("filter").AsNotRequired().
+          WithDescription("Filter for the query.").
+          WithDefaultValue(string.Empty);
+
+        return arguments;
     }
-    else if (string.IsNullOrWhiteSpace(runner.OutputText))
+
+    protected override async Task OnExecute()
     {
-      throw new KnownException("No output from gh command.");
-    }
-    else
-    {
-      var response = JsonSerializer.Deserialize<GetGraphQlTypeMetadataResponse>(runner.OutputText);
+        WriteLine("Getting metadata for type...");
 
-      if (response == null)
-      {
-        throw new InvalidOperationException("Could not deserialize output.");
-      }
+        var typeName = Arguments.GetStringValue(Constants.CommandArg_TypeName);
+        var filter = Arguments.GetStringValue("filter");
+        var dump = Arguments.GetBooleanValue("dump");
 
-      if (quiet == true)
-      {
-        return response;
-      }
-
-      foreach (var node in response.Data.Type.Fields)
-      {
         if (string.IsNullOrWhiteSpace(filter) == false)
         {
-          var nodeNameStartsWithFilter = node.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase);
-
-          var nodeArgNameStartsWithFilter = false;
-
-          if (node.Args != null && node.Args.Length > 0)
-          {
-            foreach (var arg in node.Args)
-            {
-              if (arg.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
-              {
-                nodeArgNameStartsWithFilter = true;
-                break;
-              }
-
-              if (arg.Type != null && arg.Type.Name != null &&
-                arg.Type.Name.StartsWith(filter, StringComparison.OrdinalIgnoreCase))
-              {
-                nodeArgNameStartsWithFilter = true;
-                break;
-              }
-            }
-          }
-
-          if (nodeNameStartsWithFilter == false && nodeArgNameStartsWithFilter == false)
-          {
-            // WriteLine($"Skipping {node.Name} because it does not match filter.");
-            continue;
-          }
+            WriteLine($"Filter: {filter}");
         }
 
-        WriteLine();
-        WriteLine($"Type: {node.Name}");
-        WriteLine($"Description: {node.Description}");
-        WriteLine($"Type.Kind: {node.Type.Kind}");
-        WriteLine($"Type.Name: {node.Type.Name}");
+        await GetTypeMetadata(typeName, filter);
 
-        if (node.Args != null && node.Args.Length > 0)
-        {
-          WriteLine("Args:");
-          foreach (var arg in node.Args)
-          {
-            WriteLine($"  Arg: {arg.Name}");
-            WriteLine($"  Arg.Description: {arg.Description}");
-            WriteLine($"  Arg.Type.Kind: {arg.Type.Kind}");
-            WriteLine($"  Arg.Type.Name: {arg.Type.Name}");
-          }
-        }
-        else
-        {
-          WriteLine("Args:");
-          WriteLine("  No args.");
-        }
-
-      }
-
-
-      return response;
     }
-  }
-
-  private string GetTypeMetadataQuery()
-  {
-    return @"
-query GetTypeMetadata($typeName: String!) {
-  __type(name: $typeName) {
-    name
-    description
-    fields {
-      name
-      description
-      args {
-        name
-        description
-        type {
-          name
-          kind
-        }
-      }
-      type {
-        name
-        kind
-      }
-    }
-  }
-}
-";
-  }
 }

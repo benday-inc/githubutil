@@ -1,5 +1,6 @@
 using Benday.CommandsFramework;
 using Benday.GitHubUtil.Api.Messages.GetGraphQlMetadatas;
+using Benday.GitHubUtil.Api.Messages.GetGraphQlTypeMetadatas;
 using Benday.GitHubUtil.Api.Messages.ListProjectIterations;
 using System.Diagnostics;
 using System.Text.Json;
@@ -12,141 +13,84 @@ namespace Benday.GitHubUtil.Api;
     Name = Constants.CommandName_GraphQlMetadata,
         Description = "Get graphql metadata",
         IsAsync = true)]
-public class GraphQlMetadataCommand : GitHubCommandBase
+public class GraphQlMetadataCommand : MetadataQueryCommand
 {
-  public GraphQlMetadataCommand(
-      CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)
-  {
-  }
-
-  public override ArgumentCollection GetArguments()
-  {
-    var arguments = new ArgumentCollection();
-
-    arguments.AddString("filter").AsNotRequired().
-      WithDescription("Filter for the query.").
-      WithDefaultValue(string.Empty);
-
-    return arguments;
-  }
-
-  protected override async Task OnExecute()
-  {
-    WriteLine("Getting metadata...");
-
-    var filter = Arguments.GetStringValue("filter");
-
-    await GetMetadata(filter);
-  }
-
-  private async Task<GetGraphQlMetadataResponse> GetMetadata(string filter, bool quiet = false)
-  {
-    GitHubCliCommandRunner runner;
-
-    var query = GetMetadataQuery();
-
-    runner = new GitHubCliCommandRunner(_OutputProvider);
-
-    runner.CommandName = "api";
-    runner.SubCommandName = "graphql";
-    runner.AddFieldArgument("query", query);
-
-    await runner.RunAsync();
-
-    if (runner.IsSuccess == false)
+    public GraphQlMetadataCommand(
+        CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)
     {
-      WriteLine("Error running gh command.");
-      WriteLine(runner.ErrorText);
-      throw new KnownException("Error running gh command.");
     }
-    else if (string.IsNullOrWhiteSpace(runner.OutputText))
+
+    public override ArgumentCollection GetArguments()
     {
-      throw new KnownException("No output from gh command.");
+        var arguments = new ArgumentCollection();
+
+        arguments.AddString("filter").AsNotRequired().
+          WithDescription("Filter for the query.").
+          WithDefaultValue(string.Empty);
+
+        arguments.AddBoolean("dump").
+            AsNotRequired().
+            AllowEmptyValue().
+            WithDescription("Dump the entire response to disk.").
+            WithDefaultValue(false);
+
+        return arguments;
     }
-    else
+
+    protected override async Task OnExecute()
     {
-      var response = JsonSerializer.Deserialize<GetGraphQlMetadataResponse>(runner.OutputText);
+        WriteLine("Getting metadata...");
 
-      if (response == null)
-      {
-        throw new InvalidOperationException("Could not deserialize output.");
-      }
+        var filter = Arguments.GetStringValue("filter");
 
-      if (quiet == false)
-      {
-        foreach (var node in response.Data.Schema.Types)
+
+        var dump = Arguments.GetBooleanValue("dump");
+
+        if (dump == false)
         {
-          if (node.Name == null)
-          {
-            continue;
-          }
-          else if (string.IsNullOrWhiteSpace(filter) == false &&
-              node.Name.Contains(filter, StringComparison.InvariantCultureIgnoreCase) == false)
-          {
-            continue;
-          }
-
-          WriteLine();
-          WriteLine($"Type: {node.Name}");
-          WriteLine($"Kind: {node.Kind}");
-          WriteLine($"Description: {node.Description}");
+            await GetMetadata(filter);
         }
+        else
+        {
+            var currentDir = Environment.CurrentDirectory;
 
-        return response;
-      }
-      else
-      {
-        return response;
-      }
+            var outputDir = Path.Combine("output", DateTime.Now.Ticks.ToString());
+
+            if (Directory.Exists(outputDir) == false)
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+
+            var result = await GetMetadata(string.Empty);
+
+            WriteJsonToDisk(result, outputDir, "metadata.json");
+
+            foreach (var type in result.Data.Schema.Types)
+            {
+                if (type.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    WriteLine($"Getting metadata for {type.Name}...");
+
+                    var typeResult = await GetTypeMetadata(type.Name, filter, true);
+
+                    WriteJsonToDisk(typeResult, outputDir, $"type-{type.Name}.json");
+                }
+                else
+                {
+                    continue;
+                }
+            }
+        }
     }
-
-
-  }
-
-  private bool IsCurrentIteration(Iteration iteration)
-  {
-    var now = DateTime.Now;
-
-    if (!DateTime.TryParse(iteration.StartDate, out var iterationStartDate))
+    
+    private void WriteJsonToDisk(object result, string outputDir, string filename)
     {
-      return false;
+        var outputFilename = Path.Combine(outputDir, filename);
+        var json = JsonSerializer.Serialize(result, new JsonSerializerOptions()
+        {
+            WriteIndented = true
+        });
+        File.WriteAllText(outputFilename, json);
+        WriteLine($"Wrote to {outputFilename}");
     }
-
-    if (iterationStartDate <= now && iterationStartDate.AddDays(iteration.Duration) >= now)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-
-  private string GetMetadataQuery()
-  {
-    return @"
-query {
-  __schema {
-    types {
-      name
-      kind
-      description
-    }
-    queryType {
-      name
-    }
-    mutationType {
-      name
-    }
-    subscriptionType {
-      name
-    }
-    directives {
-      name
-      description
-    }
-  }
-}
-";
-  }
 }
