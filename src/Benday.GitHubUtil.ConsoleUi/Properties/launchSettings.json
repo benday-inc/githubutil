@@ -6,6 +6,10 @@
     "delete project items": {
       "commandName": "Project",
       "commandLineArgs": "deleteissues /projectname:\"TestProject20250104\" /ownerid:benday-inc"
+    },
+    "get project iterations": {
+      "commandName": "Project",
+      "commandLineArgs": "iterations /projectname:\"Test Project Jan 4 2025\" /ownerid:benday-inc"
     }
   }
 }

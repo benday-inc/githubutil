@@ -27,11 +27,11 @@ public class CreateProjectPBIsFromDataGeneratorCommand : GitHubCommandBase
             WithDescription("Generate estimates using fibonnaci values.").
             WithDefaultValue(false);
 
-        arguments.AddString("ownerid").AsRequired().WithDescription("Owner id.");
+        arguments.AddString(Constants.CommandArg_OwnerId).AsRequired().WithDescription("Owner id.");
 
-        arguments.AddString("projectname").WithDescription("Name of the project to use.");
+        arguments.AddString(Constants.CommandArg_ProjectName).WithDescription("Name of the project to use.");
 
-        arguments.AddInt32("count").AsNotRequired().
+        arguments.AddInt32(Constants.CommandArg_Count).AsNotRequired().
             WithDescription("Number of items to create. (Default value is 10)").WithDefaultValue(10);
 
         return arguments;

@@ -70,6 +70,8 @@ public abstract class GitHubCommandBase : AsynchronousCommand
         }
     }
 
+    
+
     protected async Task<GitHubProject> GetProjectInfo(string projectName, string ownerId)
     {
         WriteLine($"Getting project info for {projectName}...");
@@ -123,7 +125,7 @@ public abstract class GitHubCommandBase : AsynchronousCommand
         {
             throw new InvalidOperationException($"Could not find project with name {projectName}.");
         }
-        else 
+        else
         {
             WriteLine($"Found project with id {project.Id}");
             return project;
