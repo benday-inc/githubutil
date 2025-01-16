@@ -55,7 +55,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
         }
         */
 
-        await GetSubIssueData(items);
+        var parents = await GetSubIssueData(items);
 
         foreach (var item in data.Items)
         {
@@ -63,31 +63,33 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
         }
     }
 
-    private async Task GetSubIssueData(Item[] items)
+    private async Task<List<GitHubParentIssue>> GetSubIssueData(Item[] items)
     {
         WriteLine($"Getting subissue data for {items.Length} items...");
+
+        var parents = new List<GitHubParentIssue>();
 
         foreach (var item in items)
         {
             var result = await GetSubIssueData(item);
 
-            if (result == null)
+            if (result == null || result.Length == 0)
             {
-                WriteLine();
-                WriteLine($"No sub-issues for item: {item.Id} -- {item.Title}");
             }
             else
             {
-                WriteLine();
-                WriteLine($"Sub-issues for item: {item.Id} -- {item.Title}");
-                WriteLine($"  Count: {result.Length}");
+                var parent = new GitHubParentIssue(item);
+
+                parents.Add(parent);
 
                 foreach (var subIssue in result)
                 {
-                    WriteLine($"  Sub-issue: {subIssue.Id} -- {subIssue.Title}");
+                    parent.AddChild(subIssue);
                 }
             }
         }
+
+        return parents;
     }
 
     private async Task<GetSubIssuesInfoResponse[]?> GetSubIssueData(Item item)
@@ -115,7 +117,7 @@ gh api \
 
         WriteLine();
         WriteLine($"Calling url: {url}");
-        
+
         await runner.RunAsync();
 
         if (runner.IsSuccess == false)
@@ -184,8 +186,8 @@ gh api \
         runner.FormatJson = true;
 
         runner.AddArgument(projectNumber.Number.ToString());
-        runner.AddArgument("--owner", ownerId);        
-        
+        runner.AddArgument("--owner", ownerId);
+
         await runner.RunAsync();
 
         if (runner.IsSuccess == false)
