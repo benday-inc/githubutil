@@ -57,9 +57,39 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
         var parents = await GetSubIssueData(items);
 
-        foreach (var item in data.Items)
+        var parentsWithChildrenNotInProject = parents.Where(x => x.OtherChildren.Count > 0).ToArray();
+
+        if (parentsWithChildrenNotInProject.Length > 0)
         {
-            WriteLine($"Item: {item.Title}");
+            WriteLine();
+            WriteLine($"Found {parentsWithChildrenNotInProject.Length} parent issues with children not in project.");
+
+            foreach (var parent in parentsWithChildrenNotInProject)
+            {
+                WriteLine($"Parent: {parent.Item.Title} -- {parent.Item.Id}");
+                foreach (var child in parent.OtherChildren)
+                {
+                    WriteLine($"  Child: {child.Title} -- {child.Id}");
+                }
+            }
+            WriteLine();
+        }
+
+        foreach (var item in parents)
+        {
+            WriteLine($"Parent: {item.Item.Title} -- {item.Item.Id}");
+
+            if (item.Children.Count == 0)
+            {
+                WriteLine($"  No children.");
+            }
+            else
+            {
+                foreach (var child in item.Children)
+                {
+                    WriteLine($"  Child: {child.Title} -- {child.Id}");
+                }
+            }
         }
     }
 
@@ -75,6 +105,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
             if (result == null || result.Length == 0)
             {
+                parents.Add(new GitHubParentIssue(item));
             }
             else
             {
@@ -84,7 +115,18 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
                 foreach (var subIssue in result)
                 {
-                    parent.AddChild(subIssue);
+                    var target = items.Where(x => 
+                        x.Content.Url == subIssue.HtmlUrl).FirstOrDefault();
+
+                    if (target == null)
+                    {
+                        parent.AddChild(subIssue);
+                    }
+                    else
+                    {
+                        parent.AddChild(target);
+                    }
+                    
                 }
             }
         }

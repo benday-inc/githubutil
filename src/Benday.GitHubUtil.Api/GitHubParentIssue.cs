@@ -11,10 +11,33 @@ public class GitHubParentIssue
     }
 
     public Item Item { get; }
+
+    /// <summary>
+    /// Adds a child that's not part of the project
+    /// </summary>
+    /// <param name="subIssue"></param>
     public void AddChild(GetSubIssuesInfoResponse subIssue)
     {
-        Children.Add(subIssue);
+        OtherChildren.Add(subIssue);
     }
 
-    public List<GetSubIssuesInfoResponse> Children { get; } = new();
+    /// <summary>
+    /// Adds a child that's part of the project
+    /// </summary>
+    /// <param name="item"></param>
+    /// <exception cref="NotImplementedException"></exception>
+    public void AddChild(Item item)
+    {
+        Children.Add(item);
+    }
+
+    /// <summary>
+    /// The children that are not part of the project
+    /// </summary>
+    public List<GetSubIssuesInfoResponse> OtherChildren { get; } = new();
+
+    /// <summary>
+    /// The children that are not part of the project
+    /// </summary>
+    public List<Item> Children { get; } = new();
 }
