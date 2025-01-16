@@ -25,6 +25,7 @@ public abstract class ProjectQueryCommand : GitHubCommandBase
         runner.SubCommandName = "graphql";
         runner.AddFieldArgument("typeName", typeName);
         runner.AddFieldArgument("query", query);
+        runner.AddHeaderArgument("GraphQL-Features", "issue_types");
 
         await runner.RunAsync();
 
@@ -127,6 +128,7 @@ public abstract class ProjectQueryCommand : GitHubCommandBase
         runner.CommandName = "api";
         runner.SubCommandName = "graphql";
         runner.AddFieldArgument("query", query);
+        runner.AddHeaderArgument("GraphQL-Features", "issue_types");
 
         await runner.RunAsync();
 

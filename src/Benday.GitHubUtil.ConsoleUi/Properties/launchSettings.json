@@ -38,6 +38,10 @@
     "graphqlmetadata with filter and dump SubIssue": {
       "commandName": "Project",
       "commandLineArgs": "graphqlmetadata /filter:subissue /dump"
+    },
+    "graphqlmetadata with filter and dump issue": {
+      "commandName": "Project",
+      "commandLineArgs": "graphqlmetadata /filter:issue /dump"
     }
   }
 }
