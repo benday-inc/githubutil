@@ -11,7 +11,7 @@ namespace Benday.GitHubUtil.Api;
     Name = Constants.CommandName_GraphQlTypeMetadata,
         Description = "Get graphql metadata for a type",
         IsAsync = true)]
-public class GraphQlTypeMetadataCommand : MetadataQueryCommand
+public class GraphQlTypeMetadataCommand : ProjectQueryCommand
 {
     public GraphQlTypeMetadataCommand(
         CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)

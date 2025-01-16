@@ -268,4 +268,14 @@ public class GitHubCliCommandRunner
     {
         Arguments.Add(new GitHubCliArgument(true, argName, argValue));
     }
+
+    public void AddArgument(string name)
+    {
+        Arguments.Add(new GitHubCliArgument(name));
+    }
+
+    internal void AddArgument(string name, string argValueQuoted)
+    {
+        Arguments.Add(new GitHubCliArgument(name, argValueQuoted));
+    }
 }

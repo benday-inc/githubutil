@@ -11,7 +11,7 @@ namespace Benday.GitHubUtil.Api;
     Name = Constants.CommandName_ProjectIterations,
         Description = "Get a list of iterations for a project",
         IsAsync = true)]
-public class ListProjectIterationsCommand : GitHubCommandBase
+public class ListProjectIterationsCommand : ProjectQueryCommand
 {
     public ListProjectIterationsCommand(
         CommandExecutionInfo info, ITextOutputProvider outputProvider) : base(info, outputProvider)

@@ -5,9 +5,9 @@ using System.Text.Json;
 
 namespace Benday.GitHubUtil.Api;
 
-public abstract class MetadataQueryCommand : GitHubCommandBase
+public abstract class ProjectQueryCommand : GitHubCommandBase
 {
-    protected MetadataQueryCommand(CommandExecutionInfo info, ITextOutputProvider outputProvider) :
+    protected ProjectQueryCommand(CommandExecutionInfo info, ITextOutputProvider outputProvider) :
         base(info, outputProvider)
     {
     }
