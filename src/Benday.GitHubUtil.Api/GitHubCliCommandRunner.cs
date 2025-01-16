@@ -89,7 +89,7 @@ public class GitHubCliCommandRunner
 
         process.StartInfo = processStartInfo;
 
-        
+
 
         using (AutoResetEvent outputWaitHandle = new AutoResetEvent(false))
         using (AutoResetEvent errorWaitHandle = new AutoResetEvent(false))
@@ -180,7 +180,7 @@ public class GitHubCliCommandRunner
 
         foreach (var arg in Arguments)
         {
-            if (arg.IsGraphQlFieldArgument == true)
+            if (arg.ArgumentType == GitHubCliArgumentType.GraphQlField)
             {
                 info.ArgumentList.Add($"-F");
 
@@ -206,6 +206,12 @@ public class GitHubCliCommandRunner
                 {
                     info.ArgumentList.Add($"{arg.Name}={arg.Value}");
                 }
+            }
+            else if (arg.ArgumentType == GitHubCliArgumentType.Header)
+            {
+                info.ArgumentList.Add($"-H");
+
+                info.ArgumentList.Add($"{arg.Name}: {arg.Value}");
             }
             else if (arg.HasValue == true)
             {
@@ -266,7 +272,7 @@ public class GitHubCliCommandRunner
 
     public void AddFieldArgument(string argName, string argValue)
     {
-        Arguments.Add(new GitHubCliArgument(true, argName, argValue));
+        Arguments.Add(new GitHubCliArgument(GitHubCliArgumentType.GraphQlField, argName, argValue));
     }
 
     public void AddArgument(string name)
@@ -277,5 +283,9 @@ public class GitHubCliCommandRunner
     public void AddArgument(string name, string argValueQuoted)
     {
         Arguments.Add(new GitHubCliArgument(name, argValueQuoted));
+    }
+    public void AddHeaderArgument(string name, string value)
+    {
+        Arguments.Add(new GitHubCliArgument(GitHubCliArgumentType.Header, name, value));
     }
 }

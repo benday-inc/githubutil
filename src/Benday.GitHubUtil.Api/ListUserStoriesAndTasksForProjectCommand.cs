@@ -1,4 +1,5 @@
 using Benday.CommandsFramework;
+using Benday.GitHubUtil.Api.Messages.GetSubIssues;
 using Benday.GitHubUtil.Api.Messages.ListProjectIssues;
 using Benday.GitHubUtil.Api.Messages.ListProjectIterations;
 using System.Diagnostics;
@@ -43,6 +44,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
         var items = data.Items;
 
+        /*
         if (currentIteration != null)
         {
             // filter but iteration
@@ -51,6 +53,9 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
                 x.Iteration.Title == currentIteration.Title && 
                 x.Iteration.StartDate == currentIteration.StartDate).ToArray();
         }
+        */
+
+        await GetSubIssueData(items);
 
         foreach (var item in data.Items)
         {
@@ -58,7 +63,106 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
         }
     }
 
-    
+    private async Task GetSubIssueData(Item[] items)
+    {
+        WriteLine($"Getting subissue data for {items.Length} items...");
+
+        foreach (var item in items)
+        {
+            var result = await GetSubIssueData(item);
+
+            if (result == null)
+            {
+                WriteLine();
+                WriteLine($"No sub-issues for item: {item.Id} -- {item.Title}");
+            }
+            else
+            {
+                WriteLine();
+                WriteLine($"Sub-issues for item: {item.Id} -- {item.Title}");
+                WriteLine($"  Count: {result.Length}");
+
+                foreach (var subIssue in result)
+                {
+                    WriteLine($"  Sub-issue: {subIssue.Id} -- {subIssue.Title}");
+                }
+            }
+        }
+    }
+
+    private async Task<GetSubIssuesInfoResponse[]?> GetSubIssueData(Item item)
+    {
+        /*
+         * # GitHub CLI api
+# https://cli.github.com/manual/gh_api
+
+gh api \
+  -H "Accept: application/vnd.github+json" \
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  /repos/OWNER/REPO/issues/ISSUE_NUMBER/sub_issues
+        */
+
+        GitHubCliCommandRunner runner = new GitHubCliCommandRunner(_OutputProvider);
+
+        runner.CommandName = "api";
+
+        runner.AddHeaderArgument("Accept", "application/vnd.github+json");
+        runner.AddHeaderArgument("X-GitHub-Api-Version", "2022-11-28");
+
+        var url = $"/repos/{item.Content.Repository}/issues/{item.Content.Number}/sub_issues";
+
+        runner.AddArgument(url);
+
+        WriteLine();
+        WriteLine($"Calling url: {url}");
+        
+        await runner.RunAsync();
+
+        if (runner.IsSuccess == false)
+        {
+            WriteLine("Error running gh command.");
+            WriteLine(runner.ErrorText);
+            throw new KnownException("Error running gh command.");
+        }
+        else if (string.IsNullOrWhiteSpace(runner.OutputText))
+        {
+            // throw new KnownException("No output from gh command.");
+            return null;
+        }
+        else
+        {
+
+            try
+            {
+
+                var response = JsonSerializer.Deserialize<GetSubIssuesInfoResponse[]>(runner.OutputText);
+
+                if (response == null)
+                {
+                    throw new InvalidOperationException("Could not deserialize output.");
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                WriteLine("Error deserializing output.");
+                WriteLine(ex.ToString());
+
+                WriteLine();
+
+                WriteLine(runner.OutputText);
+
+                WriteLine();
+
+                WriteLine();
+
+                throw;
+            }
+        }
+    }
+
+
 
     private async Task<ListProjectIssuesResponse> GetItems(string projectName, string ownerId)
     {
