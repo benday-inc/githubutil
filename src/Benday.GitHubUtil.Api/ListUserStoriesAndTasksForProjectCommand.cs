@@ -87,7 +87,29 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
             {
                 foreach (var child in item.Children)
                 {
-                    WriteLine($"  Child: {child.Title} -- {child.Id}");
+                    bool iterationMatches;
+
+                    // does child iteration match parent iteration?
+
+                    if (child.Iteration.Title == item.Item.Iteration.Title &&
+                        child.Iteration.StartDate == item.Item.Iteration.StartDate)
+                    {
+                        iterationMatches = true;
+                    }
+                    else
+                    {
+                        iterationMatches = false;
+                    }
+
+                    if (iterationMatches == false)
+                    {
+                        WriteLine($"  Child: {child.Title} -- {child.Id} <-- ITERATION MISMATCH");
+                    }
+                    else
+                    {
+                        WriteLine($"  Child: {child.Title} -- {child.Id}");
+                    }
+
                 }
             }
         }
@@ -115,7 +137,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
                 foreach (var subIssue in result)
                 {
-                    var target = items.Where(x => 
+                    var target = items.Where(x =>
                         x.Content.Url == subIssue.HtmlUrl).FirstOrDefault();
 
                     if (target == null)
@@ -126,7 +148,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
                     {
                         parent.AddChild(target);
                     }
-                    
+
                 }
             }
         }
@@ -157,9 +179,6 @@ gh api \
 
         runner.AddArgument(url);
 
-        WriteLine();
-        WriteLine($"Calling url: {url}");
-
         await runner.RunAsync();
 
         if (runner.IsSuccess == false)
@@ -175,10 +194,8 @@ gh api \
         }
         else
         {
-
             try
             {
-
                 var response = JsonSerializer.Deserialize<GetSubIssuesInfoResponse[]>(runner.OutputText);
 
                 if (response == null)
