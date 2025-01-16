@@ -32,32 +32,33 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
 
     protected override async Task OnExecute()
     {
-        WriteLine("Getting iterations...");
-
-        var currentIteration = await GetCurrentIteration();
-
         var ownerId = Arguments.GetStringValue(Constants.CommandArg_OwnerId);
         var projectName = Arguments.GetStringValue(Constants.CommandArg_ProjectName);
 
+        WriteLine("Getting iterations...");
+
+        var currentIteration = await GetCurrentIteration(projectName, ownerId);
+
         var data = await GetItems(projectName, ownerId);
 
-        var userStories = data.Items.Where(x => x.Content.Type == "User Story" is Issue).ToList();
+        var items = data.Items;
+
+        if (currentIteration != null)
+        {
+            // filter but iteration
+
+            items = items.Where(x => 
+                x.Iteration.Title == currentIteration.Title && 
+                x.Iteration.StartDate == currentIteration.StartDate).ToArray();
+        }
 
         foreach (var item in data.Items)
         {
             WriteLine($"Item: {item.Title}");
-
-            foreach (var iteration in item.Content.)
-            {
-                WriteLine($"  Iteration: {iteration.Iteration.Title}");
-            }
         }
     }
 
-    private async Task GetCurrentIteration()
-    {
-        throw new NotImplementedException();
-    }
+    
 
     private async Task<ListProjectIssuesResponse> GetItems(string projectName, string ownerId)
     {
@@ -174,7 +175,7 @@ public class ListUserStoriesAndTasksForProjectCommand : ProjectQueryCommand
         }
     }
 
-    private bool IsCurrentIteration(Iteration iteration)
+    private bool IsCurrentIteration(Messages.ListProjectIterations.Iteration iteration)
     {
         var now = DateTime.Now;
 

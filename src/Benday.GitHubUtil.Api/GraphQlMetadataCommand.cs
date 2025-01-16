@@ -1,7 +1,4 @@
 using Benday.CommandsFramework;
-using Benday.GitHubUtil.Api.Messages.GetGraphQlMetadatas;
-using Benday.GitHubUtil.Api.Messages.GetGraphQlTypeMetadatas;
-using Benday.GitHubUtil.Api.Messages.ListProjectIterations;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;

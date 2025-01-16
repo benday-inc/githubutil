@@ -274,7 +274,7 @@ public class GitHubCliCommandRunner
         Arguments.Add(new GitHubCliArgument(name));
     }
 
-    internal void AddArgument(string name, string argValueQuoted)
+    public void AddArgument(string name, string argValueQuoted)
     {
         Arguments.Add(new GitHubCliArgument(name, argValueQuoted));
     }

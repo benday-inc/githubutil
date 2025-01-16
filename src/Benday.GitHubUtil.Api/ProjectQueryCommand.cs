@@ -1,6 +1,7 @@
 using Benday.CommandsFramework;
 using Benday.GitHubUtil.Api.Messages.GetGraphQlMetadatas;
 using Benday.GitHubUtil.Api.Messages.GetGraphQlTypeMetadatas;
+using Benday.GitHubUtil.Api.Messages.ListProjectIterations;
 using System.Text.Json;
 
 namespace Benday.GitHubUtil.Api;
@@ -235,5 +236,114 @@ query GetTypeMetadata($typeName: String!) {
   }
 }
 ";
+    }
+
+    private string GetIterationsQuery()
+    {
+        return @"
+query ($owner: String!, $number: Int!) {
+  organization(login: $owner) {
+    projectV2(number: $number) {
+      fields(first: 100) {
+        nodes {
+          ... on ProjectV2IterationField {
+            name
+            configuration {
+              iterations {
+                id
+                title
+                startDate
+                duration
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+";
+    }
+
+    protected async Task<Iteration?> GetCurrentIteration(string projectName, string ownerId)
+    {
+        var response = await GetIterations(projectName, ownerId);
+        if (response == null)
+        {
+            return null;
+        }
+
+        var iterations = response.Data.Organization.ProjectV2.Fields.Nodes;
+
+        if (iterations == null)
+        {
+            return null;
+        }
+
+
+        foreach (var node in iterations)
+        {
+            if (string.IsNullOrEmpty(node.Name) == false)
+            {
+                foreach (var iteration in node.Configuration.Iterations)
+                {
+                    if (iteration.IsCurrentIteration() == true)
+                    {
+                        return iteration;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    protected async Task<ListProjectIterationsResponse> GetIterations(string projectName, string ownerId)
+    {
+        // gh api graphql -F owner=<OWNER> -F number=<PROJECT_NUMBER> -f query='@iterations_query.graphql'
+        var projectNumber = await GetProjectInfo(projectName, ownerId);
+
+        if (projectNumber == null)
+        {
+            throw new KnownException("Could not find project.");
+        }
+
+        GitHubCliCommandRunner runner;
+
+
+        var query = GetIterationsQuery();
+
+        runner = new GitHubCliCommandRunner(_OutputProvider);
+
+        runner.CommandName = "api";
+        runner.SubCommandName = "graphql";
+        runner.AddFieldArgument("owner", ownerId);
+        runner.AddFieldArgument("number", projectNumber.Number.ToString());
+        runner.AddFieldArgument("query", query);
+
+        await runner.RunAsync();
+
+        if (runner.IsSuccess == false)
+        {
+            WriteLine("Error running gh command.");
+            WriteLine(runner.ErrorText);
+            throw new KnownException("Error running gh command.");
+        }
+        else if (string.IsNullOrWhiteSpace(runner.OutputText))
+        {
+            throw new KnownException("No output from gh command.");
+        }
+        else
+        {
+
+            var response = JsonSerializer.Deserialize<ListProjectIterationsResponse>(runner.OutputText);
+
+            if (response == null)
+            {
+                throw new InvalidOperationException("Could not deserialize output.");
+            }
+
+            return response;            
+        }
     }
 }

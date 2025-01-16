@@ -30,6 +30,10 @@
     "graphqlmetadata with filter and dump": {
       "commandName": "Project",
       "commandLineArgs": "graphqlmetadata /filter:projectv2 /dump"
+    },
+    "project items": {
+      "commandName": "Project",
+      "commandLineArgs": "projectitems /projectname:\"Test Project Jan 4 2025\" /ownerid:benday-inc"
     }
   }
 }

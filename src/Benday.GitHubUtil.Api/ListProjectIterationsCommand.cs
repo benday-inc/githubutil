@@ -1,5 +1,4 @@
 using Benday.CommandsFramework;
-using Benday.GitHubUtil.Api.Messages.ListProjectIterations;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -36,125 +35,26 @@ public class ListProjectIterationsCommand : ProjectQueryCommand
         var ownerId = Arguments.GetStringValue(Constants.CommandArg_OwnerId);
         var projectName = Arguments.GetStringValue(Constants.CommandArg_ProjectName);
 
-        await GetIterations(projectName, ownerId);
-    }
+        var response = await GetIterations(projectName, ownerId);
 
-    private async Task GetIterations(string projectName, string ownerId)
-    {
-        // gh api graphql -F owner=<OWNER> -F number=<PROJECT_NUMBER> -f query='@iterations_query.graphql'
-        var projectNumber = await GetProjectInfo(projectName, ownerId);
-
-        if (projectNumber == null)
+        foreach (var node in response.Data.Organization.ProjectV2.Fields.Nodes)
         {
-            throw new KnownException("Could not find project.");
-        }
-
-        GitHubCliCommandRunner runner;
-
-
-        var query = GetQuery();
-
-        runner = new GitHubCliCommandRunner(_OutputProvider);
-
-        runner.CommandName = "api";
-        runner.SubCommandName = "graphql";
-        runner.AddFieldArgument("owner", ownerId);
-        runner.AddFieldArgument("number", projectNumber.Number.ToString());
-        runner.AddFieldArgument("query", query);
-
-        await runner.RunAsync();
-
-        if (runner.IsSuccess == false)
-        {
-            WriteLine("Error running gh command.");
-            WriteLine(runner.ErrorText);
-            throw new KnownException("Error running gh command.");
-        }
-        else if (string.IsNullOrWhiteSpace(runner.OutputText))
-        {
-            throw new KnownException("No output from gh command.");
-        }
-        else
-        {
-
-            var response = JsonSerializer.Deserialize<ListProjectIterationsResponse>(runner.OutputText);
-
-            if (response == null)
+            if (string.IsNullOrEmpty(node.Name) == false)
             {
-                throw new InvalidOperationException("Could not deserialize output.");
-            }
 
-            foreach (var node in response.Data.Organization.ProjectV2.Fields.Nodes)
-            {
-                if (string.IsNullOrEmpty(node.Name) == false)
+                WriteLine($"Field: {node.Name}");
+
+                foreach (var iteration in node.Configuration.Iterations)
                 {
-
-                    WriteLine($"Field: {node.Name}");
-
-                    foreach (var iteration in node.Configuration.Iterations)
-                    {
-                        WriteLine($"  Iteration: {iteration.Title}");
-                        WriteLine($"    Id: {iteration.Id}");
-                        WriteLine($"    Start Date: {iteration.StartDate}");
-                        WriteLine($"    Duration: {iteration.Duration}");
-
-                        var isCurrentIteration = IsCurrentIteration(iteration);
-
-                        WriteLine($"    Is Current: {isCurrentIteration}");
-                    }
+                    WriteLine($"  Iteration: {iteration.Title}");
+                    WriteLine($"    Id: {iteration.Id}");
+                    WriteLine($"    Start Date: {iteration.StartDate}");
+                    WriteLine($"    Duration: {iteration.Duration}");
+                    WriteLine($"    Is Current: {iteration.IsCurrentIteration}");
                 }
             }
         }
     }
 
-    private bool IsCurrentIteration(Iteration iteration)
-    {
-        var now = DateTime.Now;
-
-        if (!DateTime.TryParse(iteration.StartDate, out var iterationStartDate))
-        {
-            return false;
-        }
-
-        if (iterationStartDate <= now && iterationStartDate.AddDays(iteration.Duration) >= now)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private string GetSimpleQuery()
-    {
-        return "query { viewer { login } }";
-    }
-
-    private string GetQuery()
-    {
-        return @"
-query ($owner: String!, $number: Int!) {
-  organization(login: $owner) {
-    projectV2(number: $number) {
-      fields(first: 100) {
-        nodes {
-          ... on ProjectV2IterationField {
-            name
-            configuration {
-              iterations {
-                id
-                title
-                startDate
-                duration
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-";
-    }
+    
 }

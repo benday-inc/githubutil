@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace Benday.GitHubUtil.Api;
+namespace Benday.GitHubUtil.Api.Messages;
 
 
 public class GithubProjectItem

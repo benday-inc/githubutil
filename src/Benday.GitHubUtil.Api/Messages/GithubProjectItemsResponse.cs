@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Benday.GitHubUtil.Api;
+namespace Benday.GitHubUtil.Api.Messages;
 public class GithubProjectItemsResponse
 {
     [JsonPropertyName("items")]
