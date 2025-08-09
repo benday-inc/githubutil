@@ -42,6 +42,10 @@
     "graphqlmetadata with filter and dump issue": {
       "commandName": "Project",
       "commandLineArgs": "graphqlmetadata /filter:issue /dump"
+    },
+    "import project data from csv": {
+      "commandName": "Project",
+      "commandLineArgs": "import /projectname:\"QA Tool\" /ownerid:benday-inc /Users/benday/Library/CloudStorage/OneDrive-BenjaminDayConsulting,Inc/projects/_qa-tool/qa-tool-mvp-backlog-20250805.csv"
     }
   }
 }

@@ -9,7 +9,7 @@
     <ProjectReference Include="..\Benday.GitHubUtil.Api\Benday.GitHubUtil.Api.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Benday.CommandsFramework" Version="4.4.0" />
+    <PackageReference Include="Benday.CommandsFramework" Version="4.10.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="bdc_mark_128_128.png">
